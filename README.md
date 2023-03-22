@@ -14,3 +14,4 @@ now install alcapa 7B model
 or llama 7B model
 >npx dalai llama install 7B
 
+dd
