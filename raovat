@@ -1,0 +1,74 @@
+import tensorflow as tf
+import tensorflow_hub as hub
+import numpy as np
+import pandas as pd
+import requests
+from bs4 import BeautifulSoup
+
+# Load the Universal Sentence Encoder model
+embed = hub.load("https://tfhub.dev/google/universal-sentence-encoder/4")
+
+# Function to encode text in batches
+def batch_encode_text(texts, batch_size=32):
+    encoded_vectors = []
+    num_batches = len(texts) // batch_size + 1
+    
+    for i in range(num_batches):
+        start = i * batch_size
+        end = (i + 1) * batch_size
+        batch = texts[start:end]
+        
+        # Encode the batch of text
+        batch_vectors = embed(batch)
+        encoded_vectors.extend(batch_vectors.numpy())
+    
+    return np.array(encoded_vectors)
+
+# URL of the web page containing the text data (replace with your URL)
+web_page_url = "https://example.com/text_data_page"
+
+# Make an HTTP request to fetch the web page content
+response = requests.get(web_page_url)
+
+# Parse the HTML content of the web page
+soup = BeautifulSoup(response.text, "html.parser")
+
+# Extract the text data from the web page (adjust as per your page structure)
+text_data = []
+
+for paragraph in soup.find_all("p"):
+    text_data.append(paragraph.get_text())
+
+# Initialize an empty DataFrame to store the text data
+df = pd.DataFrame({"text_column": text_data})
+
+# Choose the column containing the text data you want to encode
+text_column_name = "text_column"
+
+# Get the number of rows in your DataFrame
+num_rows = len(df)
+
+# Initialize an empty array to store the encoded vectors
+encoded_data = np.empty((0, 512))  # Assuming USE model returns vectors of size 512
+
+# Set the batch size based on available memory and performance considerations
+batch_size = 32
+
+# Loop through the dataset in batches and encode the text
+for start in range(0, num_rows, batch_size):
+    end = min(start + batch_size, num_rows)
+    batch_texts = df[text_column_name][start:end].tolist()
+    
+    # Encode the batch of text
+    batch_encoded = batch_encode_text(batch_texts, batch_size=batch_size)
+    
+    # Append the encoded batch to the result
+    encoded_data = np.vstack((encoded_data, batch_encoded))
+
+# Now, encoded_data contains the encoded vectors for the text data obtained from the web page
+
+# Create a DataFrame from the encoded data
+encoded_df = pd.DataFrame(encoded_data)
+
+# Save the DataFrame to a CSV file
+encoded_df.to_csv("encoded_data.csv", index=False)
