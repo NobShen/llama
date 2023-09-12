@@ -1,3 +1,5 @@
+cat westminster-nh-cn-trc-pnpt-sau-pn-pt-vn-rng-car-garage-driveway-listing-490970.aspx|sed 's|<div class="Title">|\nJason|g' | grep Jason|sed 's|.aspx">|\nAds:|g'|sed 's|</a></div>|</p>\n|g'|grep Ads|sed 's|Ads:|<p>|g'>t3.test2
+
 import tensorflow as tf
 import tensorflow_hub as hub
 import numpy as np
